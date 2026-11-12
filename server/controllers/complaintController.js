@@ -1,4 +1,5 @@
 const Complaint = require('../models/Complaint');
+const uploadToCloudinary = require('../utils/uploadToCloudinary');
 
 // POST /api/complaints
 const createComplaint = async (req, res) => {
@@ -11,10 +12,17 @@ const createComplaint = async (req, res) => {
         .json({ success: false, message: 'Latitude and longitude are required' });
     }
 
+    // NEW: upload the photo (if one was attached) and get its URL
+    let imageUrl = '';
+    if (req.file) {
+      imageUrl = await uploadToCloudinary(req.file.buffer);
+    }
+
     const complaint = await Complaint.create({
       title,
       description,
       category,
+      imageUrl, // NEW
       location: {
         type: 'Point',
         coordinates: [Number(longitude), Number(latitude)], // longitude first!
