@@ -7,6 +7,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
@@ -19,7 +20,8 @@ app.get('/api/health', (req, res) => {
 });
  app.use('/api/auth', authRoutes);
  app.use('/api/complaints', complaintRoutes);
- 
+ app.use(notFound);
+ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
