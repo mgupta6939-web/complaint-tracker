@@ -11,7 +11,13 @@ const upload = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
-router.get('/', getComplaints);
+router.get('/', (req, res, next) => {
+  if (req.query.mine === 'true') {
+    return protect(req, res, next);
+  }
+
+  next();
+}, getComplaints);
 router.post('/', protect, upload.single('image'), createComplaint);
 router.get('/:id', getComplaint);
 router.put('/:id/upvote', protect, toggleUpvote);

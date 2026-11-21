@@ -6,11 +6,26 @@ const createComplaint = async (req, res) => {
   try {
     const { title, description, category, latitude, longitude, address } = req.body;
 
-    if (latitude === undefined || longitude === undefined) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Latitude and longitude are required' });
-    }
+    const lat = Number(latitude);
+const lng = Number(longitude);
+
+if (
+  latitude === undefined ||
+  longitude === undefined ||
+  Number.isNaN(lat) ||
+  Number.isNaN(lng)
+) {
+  return res
+    .status(400)
+    .json({ success: false, message: 'Latitude and longitude are required' });
+}
+
+
+if (lat < 6 || lat > 37.5 || lng < 68 || lng > 98) {
+  return res
+    .status(400)
+    .json({ success: false, message: 'Location must be inside India' });
+}
 
     // NEW: upload the photo (if one was attached) and get its URL
     let imageUrl = '';
@@ -39,21 +54,48 @@ const createComplaint = async (req, res) => {
 };
 
 // GET /api/complaints?category=road&status=pending
+
 const getComplaints = async (req, res) => {
   try {
     const filter = {};
-    if (req.query.category) filter.category = req.query.category;
-    if (req.query.status) filter.status = req.query.status;
+
+    // Show only the logged-in user's complaints when requested.
+    if (req.query.mine === 'true') {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Please log in to view your reports.',
+        });
+      }
+
+      filter.createdBy = req.user._id;
+    }
+
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
 
     const complaints = await Complaint.find(filter)
       .populate('createdBy', 'name')
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, count: complaints.length, complaints });
+    res.json({
+      success: true,
+      count: complaints.length,
+      complaints,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
+
 
 // GET /api/complaints/:id
 const getComplaint = async (req, res) => {

@@ -70,4 +70,8 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   res.json({ success: true, user: userResponse(req.user) });
 };
-module.exports = { register, login, getMe };
+module.exports = {
+  register,
+  login,
+  getMe,
+};
